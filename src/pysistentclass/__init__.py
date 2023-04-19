@@ -81,7 +81,7 @@ def pysistentclass(wrapped_class: type):
 
     This decorator can be used to mark a class as a pysistentclass.
     """
-    setattr(wrapped_class, "_scope", Scope.PUBLIC)
+    setattr(wrapped_class, "_scope", getattr(wrapped_class, "_scope", Scope.PUBLIC))
     setattr(wrapped_class, "_class_key", None)
     wrapped_class = dataclass(wrapped_class)
     return wrapped_class
