@@ -2,7 +2,7 @@ from __future__ import annotations
 from pathlib import Path
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Any
 
 from importlib import import_module
 
@@ -75,16 +75,16 @@ class Scope(str, Enum):
             pass
 
 
-@dataclass
-class Entry:
+def pysistentclass(wrapped_class: type):
     """
-    Entry class
+    pysistentclass decorator
 
-    This is the base class for all entries in the settings file. It
-    should not be used directly, but subclassed.
+    This decorator can be used to mark a class as a pysistentclass.
     """
-    _scope: Scope
-    _class_key: str
+    setattr(wrapped_class, "_scope", Scope.PUBLIC)
+    setattr(wrapped_class, "_class_key", None)
+    wrapped_class = dataclass(wrapped_class)
+    return wrapped_class
 
 
 @dataclass
@@ -112,13 +112,13 @@ class Settings(dict):
 
     _classes: Dict[str, Dict[str, str]] = field(
         default_factory=dict, init=False)
-    _settings: Dict[str, Entry] = field(default_factory=dict, init=False)
+    _settings: Dict[str, object] = field(default_factory=dict, init=False)
 
     module_names: List[str] = field(default_factory=list)
     format: Format = Format.JSON
     logging_level: int = logging.DEBUG
 
-    def json_object_hook(self, obj: dict) -> Entry:
+    def json_object_hook(self, obj: dict) -> object:
         if "_class_key" in obj:
             class_key = obj["_class_key"]
             module = import_module(self._classes[class_key]["module"])
@@ -159,8 +159,8 @@ class Settings(dict):
             classes = inspect.getmembers(
                 module,
                 lambda o: inspect.isclass(o)
-                and issubclass(o, Entry)
-                and o is not Entry,
+                and hasattr(o, "_class_key")
+                and hasattr(o, "_scope"),
             )
             for class_name, class_obj in classes:
                 key = f"{mod_name}.{class_name}"
@@ -193,7 +193,7 @@ class Settings(dict):
             LOGGER.debug(f"+ instance of {class_obj}")
             self._settings[module_class_dict["class_name"]] = instance
 
-    def get(self, key: str) -> Entry:
+    def get(self, key: str) -> Any:
         return self._settings[key]
 
     def write(self):
