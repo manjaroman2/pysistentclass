@@ -1,8 +1,8 @@
 from __future__ import annotations
 from pathlib import Path
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, make_dataclass
 from enum import Enum
-from typing import Dict, List, Union, Any
+from typing import Dict, List, Union, Any, Type
 
 from importlib import import_module
 
@@ -75,16 +75,17 @@ class Scope(str, Enum):
             pass
 
 
-def pysistentclass(wrapped_class: type):
+def pysistentclass(cls=None, /, *, init=True) -> Type[_T@dataclass]:
     """
     pysistentclass decorator
 
     This decorator can be used to mark a class as a pysistentclass.
     """
-    setattr(wrapped_class, "_scope", getattr(wrapped_class, "_scope", Scope.PUBLIC))
-    setattr(wrapped_class, "_class_key", None)
-    wrapped_class = dataclass(wrapped_class)
-    return wrapped_class
+    # return make_dataclass(cls.__name__)
+    datacls = dataclass(cls)
+    setattr(datacls, "_scope", getattr(datacls, "_scope", Scope.PUBLIC))
+    setattr(datacls, "_class_key", None)
+    return datacls
 
 
 @dataclass

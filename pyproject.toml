@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pysistentclass"
-version = "0.0.4"
+version = "0.0.5"
 authors = [{ name = "manjaroman2", email = "manjaroman2@protonmail.com" }]
 description = "A small settings module for python"
 readme = "README.md"
