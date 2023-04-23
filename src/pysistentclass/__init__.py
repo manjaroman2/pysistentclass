@@ -1,8 +1,8 @@
 from __future__ import annotations
 from pathlib import Path
-from dataclasses import dataclass, field, make_dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Union, Any, Type
+from typing import Dict, List, Union, Any, dataclass_transform, Type, TypeVar
 
 from importlib import import_module
 
@@ -16,11 +16,20 @@ import hashlib
 import colorlog
 import logging
 
+T = TypeVar("T")
+
 
 def logger(name: str) -> logging.Logger:
     logger = colorlog.getLogger(name)
-    myFormatter = colorlog.ColoredFormatter(log_colors={
-        'DEBUG': 'cyan', 'INFO': 'reset', 'ERROR': 'bold_red', 'WARNING': 'yellow'}, fmt="%(log_color)s%(levelname)s %(asctime)s " + name + " > %(message)s")
+    myFormatter = colorlog.ColoredFormatter(
+        log_colors={
+            "DEBUG": "cyan",
+            "INFO": "reset",
+            "ERROR": "bold_red",
+            "WARNING": "yellow",
+        },
+        fmt="%(log_color)s%(levelname)s %(asctime)s " + name + " > %(message)s",
+    )
     handler = colorlog.StreamHandler()
     handler.setFormatter(myFormatter)
     logger.addHandler(handler)
@@ -35,13 +44,12 @@ class SettingsAttributeError(Exception):
     pass
 
 
-def skip_underscore_keys(obj): return {
-    k: v for k, v in vars(obj).items() if not k.startswith("_")
-}
+def skip_underscore_keys(obj):
+    return {k: v for k, v in vars(obj).items() if not k.startswith("_")}
 
 
-def json_pretty(obj): return json.dumps(
-    obj, indent=4, sort_keys=True, default=vars)
+def json_pretty(obj):
+    return json.dumps(obj, indent=4, sort_keys=True, default=vars)
 
 
 class Format(str, Enum):
@@ -75,22 +83,23 @@ class Scope(str, Enum):
             pass
 
 
-def pysistentclass(cls=None, /, *, init=True):
+@dataclass_transform()
+def pysistentclass(cls: Type[T]) -> Type[T]:
     """
     pysistentclass decorator
 
     This decorator can be used to mark a class as a pysistentclass.
     """
     # return make_dataclass(cls.__name__)
+    cls._scope = getattr(cls, "_scope", Scope.PUBLIC)
+    cls._class_key = None
     datacls = dataclass(cls)
-    setattr(datacls, "_scope", getattr(datacls, "_scope", Scope.PUBLIC))
-    setattr(datacls, "_class_key", None)
     return datacls
 
 
 @dataclass
 class Settings(dict):
-    """ Settings class
+    """Settings class
 
     This is a dataclass that holds the settings for the application. It
     is a subclass of dict, so it can be used as a dict.
@@ -109,10 +118,10 @@ class Settings(dict):
     parameter should be the path to the directory where the settings
     file will be stored.
     """
+
     settings_dir: Union[Path, str]
 
-    _classes: Dict[str, Dict[str, str]] = field(
-        default_factory=dict, init=False)
+    _classes: Dict[str, Dict[str, str]] = field(default_factory=dict, init=False)
     _settings: Dict[str, object] = field(default_factory=dict, init=False)
 
     module_names: List[str] = field(default_factory=list)
@@ -125,8 +134,7 @@ class Settings(dict):
             module = import_module(self._classes[class_key]["module"])
             class_name = self._classes[class_key]["class_name"]
             if not hasattr(module, class_name):
-                raise SettingsAttributeError(
-                    f"{module} does not have {class_name}")
+                raise SettingsAttributeError(f"{module} does not have {class_name}")
             class_obj = getattr(module, class_name)
             return class_obj(**obj)
         return obj
@@ -216,8 +224,7 @@ class Settings(dict):
         if serialized != default_serialized:
             LOGGER.debug("serialized != default_serialized")
         if not deserialized:
-            LOGGER.debug(
-                "deserialized is None or empty using default settings!")
+            LOGGER.debug("deserialized is None or empty using default settings!")
             deserialized = self._settings
         self._settings = deserialized
         self.public = {}

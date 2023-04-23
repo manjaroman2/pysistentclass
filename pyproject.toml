@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pysistentclass"
-version = "0.0.5"
+version = "0.0.6"
 authors = [{ name = "manjaroman2", email = "manjaroman2@protonmail.com" }]
 description = "A small settings module for python"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
