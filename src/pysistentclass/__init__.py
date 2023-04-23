@@ -75,7 +75,7 @@ class Scope(str, Enum):
             pass
 
 
-def pysistentclass(cls=None, /, *, init=True) -> Type[_T@dataclass]:
+def pysistentclass(cls=None, /, *, init=True):
     """
     pysistentclass decorator
 
